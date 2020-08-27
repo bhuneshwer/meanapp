@@ -5,6 +5,7 @@
     function init() {
         getWelcomeText()
         addEventListeners()
+        getTodos()
 
     }
 
@@ -24,6 +25,11 @@
         __id("getWecomeTextBtn").addEventListener("click", (event) => {
             console.log(`username is ${__id("usernamePost").value} and companyname is ${__id("companynamePost").value}`)
             getWelcomeTextPost(__id("usernamePost").value, __id("companynamePost").value)
+        })
+
+        __id("postTodoBtn").addEventListener("click", (event) => {
+
+            createTodo();
         })
     }
 
@@ -78,6 +84,34 @@
                 reject(e);
             }
         });
+    }
+
+    function createTodo() {
+        var todo = {
+            taskname: __id("taskname").value,
+            taskdescription: __id("taskdescription").value,
+            taskstatus: __id("taskstatus").value
+        }
+        executeAjax(`${baseUrl}/todos/create`, "POST", todo).then((response) => {
+            getTodos()
+        }).catch((err) => {
+            console.error(err.message)
+        })
+
+    }
+
+    function getTodos() {
+        executeAjax(`${baseUrl}/todos`, "GET", {}).then((response) => {
+            if (response && response.length) {
+                let myTodosStr = ``
+                response.forEach((todo) => {
+                    myTodosStr += `<li style="border-bottom:1px solid #ddd;padding:5px">${todo.taskname} - ${todo.taskstatus} <span style="cursor:pointer;color:green">Done</span></li>`;
+                })
+                __id("todosList").innerHTML = myTodosStr;
+            }
+        }).catch((err) => {
+            console.error(err.message)
+        })
     }
 
 
