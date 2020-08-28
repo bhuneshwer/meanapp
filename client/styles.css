@@ -1,0 +1,25 @@
+.todo-input {
+    white-space: pre-line;
+    word-break: break-all;
+    /*padding: 15px 60px 15px 15px;
+    margin-left: 45px;
+    display: block;
+    line-height: 1.2;
+    transition: color 0.4s;
+    border: 0;
+    border: none;
+    border-bottom: 1px solid #ededed;
+    background: rgba(0, 0, 0, 0.003);
+    position: relative;
+    margin: 0;
+    width: calc(100% - 175px);
+    font-size: 24px;
+    font-family: inherit;
+    font-weight: inherit;
+    line-height: 1.4em;
+    outline: none;
+    color: inherit*/;
+    -webkit-font-smoothing: antialiased;
+    -moz-font-smoothing: antialiased;
+    font-smoothing: antialiased;
+}

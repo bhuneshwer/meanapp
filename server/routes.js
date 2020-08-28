@@ -3,7 +3,10 @@
 
     function establishRoutes(app) {
 
-        const Utils = require("./utils").Utils
+        const Utils = require("./utils").Utils;
+        const ObjectID = require('mongodb').ObjectID;
+
+
 
         app.use(require("express").static("../client"))
 
@@ -33,15 +36,31 @@
             })
         })
 
+        app.put('/todos/update', (req, res) => {
+            let todoId = req.query.todoId;
+            let todoObjectToUpdate = {
+                "taskstatus": req.body.todoStatus,
+                "updatedOn": new Date()
+            }
+
+            let _id = new ObjectID.createFromHexString(todoId.toString())
+
+            Utils.getDBClient().then((dbClient) => {
+                dbClient.collection("todos").update({ _id }, {
+                    $set: todoObjectToUpdate
+                }, (err, results) => {
+                    res.json(results)
+                });
+            })
+        })
+
 
 
         app.get("/", (req, res) => {
             res.render("index.html")
         })
 
-
     }
-
 
     exports.routes = {
         "establishRoutes": establishRoutes,
