@@ -55,6 +55,30 @@
         })
 
 
+        app.post('/accounts/create', (req, res) => {
+            let rqst = {
+                "req": req,
+                "body": req.body,
+                "query": req.query
+            }
+
+            let q = require("q").defer(); // PENDING
+
+            require("./controllers/register_post").execute(rqst, Utils, q);
+
+            q.promise.then((response) => {
+                res.json(response);
+            }, function(error) {
+                res.json({ "error": error })
+            })
+
+
+
+
+
+        })
+
+
 
         app.get("/", (req, res) => {
             res.render("index.html")
