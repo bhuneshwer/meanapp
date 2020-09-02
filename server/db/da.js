@@ -21,6 +21,7 @@
         // Options.limit ?
         // options.sortingParams?
 
+        let selectedFields = options && options.selectedFields ? options.selectedFields : {};
         return new Promise((resolve, reject) => {
             utils.getDBClient().then((dbClient) => {
                 let collection = dbClient.collection(collectionName);
@@ -30,13 +31,13 @@
                 if (options && options.limit && options.pageNumber) {
                     // options has limit and paging data
                     // using skip and limit to enable paging
-                    cursor = collection.find(queryParameters, selectedFields).skip(options.pageNumber > 0 ? ((options.pageNumber - 1) * options.limit) : 0).sort({
+                    cursor = collection.find(queryParams, selectedFields).skip(options.pageNumber > 0 ? ((options.pageNumber - 1) * options.limit) : 0).sort({
                         _id: -1
                     });
                     cursor.limit(options.limit);
                 } else {
                     // no options is available for paging
-                    cursor = collection.find(queryParameters, selectedFields).sort({
+                    cursor = collection.find(queryParams, selectedFields).sort({
                         _id: -1
                     });
                 }
@@ -68,10 +69,28 @@
         })
     }
 
+    function deleteDocument(collectionName, queryParams, utils, options) {
+        return new Promise((resolve, reject) => {
+            utils.getDBClient().then((dbClient) => {
+                let collection = dbClient.collection(collectionName);
+                collection.remove(queryParams, (response) => {
+                    return resolve(response);
+                }, (error) => {
+                    return reject(response)
+                })
+
+            }, (err) => {
+                console.error(`Error while getting db client err is ${JSON.stringify(err)}`)
+                return reject(err);
+            });
+        });
+    }
+
     exports.DA = {
         create: create,
         getByQuery: getByQuery,
         update: update,
-        getById: getById
+        getById: getById,
+        deleteDocument: deleteDocument
     }
 })()

@@ -71,10 +71,21 @@
             }, function(error) {
                 res.json({ "error": error })
             })
+        })
 
 
-
-
+        app.get("/api/accounts/verify", (req, res) => {
+            let rqst = {
+                "req": req,
+                "query": req.query
+            }
+            let q = require("q").defer();
+            require("./controllers/verify_email_get").execute(rqst, Utils, q);
+            q.promise.then((response) => {
+                res.json(response);
+            }, function(error) {
+                res.json({ "error": error })
+            })
 
         })
 

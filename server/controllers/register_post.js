@@ -22,7 +22,7 @@
         });
 
         if (validationErrors.length) {
-            res.json({ "errors": validationErrors })
+            return q.resolve({ "errors": validationErrors })
         } else {
 
             rqst.body.emailAddress = rqst.body.emailAddress.toLocaleLowerCase();
@@ -41,62 +41,77 @@
                 user.password = bcrypt.hashSync(user.password, 10);
             }
 
+
+            let queryParams = {
+                "emailAddress": rqst.body.emailAddress
+            }
+            // Get the DA object
             const DA = require("../db/da").DA;
+            // args
+            DA.getByQuery("users", queryParams, utils, {}).then((results) => {
+                if (results && results.length) {
+                    return q.resolve({
+                        "code": 1,
+                        "errMsg": `User with given email address is already registered.`
+                    })
+                } else {
+                    createUser();
+                }
+            }).catch((err) => {
+                return q.resolve({
+                    "code": 1,
+                    "errMsg": `Exception has been raised \n ${err.toString()}`
+                })
+            })
 
-           	
 
 
-
-
-
-
-
-            // fwk.db.Users.getUsers({
-            //     "email": rqst.body.emailAddress
-            // }, {}, {}, fwk, (err, users) => {
-            //     if (users && users.length) {
-            //         fwk.resolveResponse(q, 1, 200, {}, `User already exist with given email ${rqst.body.emailAddress}.`);
-            //     } else {
-            //         createRandomToken
-            //             .then((token) => {
-            //                 let now = new Date();
-            //                 user.emailAddressVerificationToken = token;
-            //                 // 7 days expiration for token
-            //                 user.emailAddressVerificationTokenExpiresAfter = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000))
-            //                 return {
-            //                     token: token,
-            //                     email: user.emailAddress,
-            //                     host: rqst.req.headers.host
-            //                 };
-            //             }).then((tokenParams) => {
-            //                 return new Promise((resolve, reject) => {
-            //                     fwk.db.Users.createUser(user, fwk, (err, results) => {
-            //                         if (err) {
-            //                             reject(err);
-            //                         } else {
-            //                             console.warn(`New user created with response ${JSON.stringify(results)}`);
-            //                             resolve(tokenParams);
-            //                         }
-            //                     })
-            //                 });
-            //             })
-            //             .then(sendVerifyEmail)
-            //             .then((emailResponse) => {
-            //                 console.warn(`Email Response ${JSON.stringify(emailResponse)}`);
-            //                 fwk.resolveResponse(q, 0, 200, {
-            //                     "msg": `An e-mail has been sent to ${user.emailAddress} with further instructions.`
-            //                 }, `An e-mail has been sent to ${user.emailAddress} with further instructions.`);
-            //             })
-            //             .catch((err) => {
-            //                 fwk.resolveResponse(q, 1, 200, {}, err.toString());
-            //             });
-
-            //     }
-            // });
+            function createUser() {
+                createRandomToken.then((token) => {
+                        let now = new Date();
+                        // assigning random token for email verification
+                        user.emailAddressVerificationToken = token;
+                        // Setting expiration time as 7 days
+                        user.emailTokenExpiredAfter = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                        return {
+                            "token": token,
+                            "emailAddress": user.emailAddress,
+                            "host": rqst.req.headers.host
+                        }
+                    }).then((tokenParams) => {
+                        // Adding a entry of user object into the users collection
+                        return new Promise((resolve, reject) => {
+                            DA.create("users", user, utils, {}).then((insertedData) => {
+                                resolve(tokenParams);
+                            }, (userCreationDbErr) => {
+                                reject(userCreationDbErr);
+                            })
+                        })
+                    }).then(sendVerifyEmail)
+                    .then((emailResponse) => {
+                        console.warn(`Email Response ${JSON.stringify(emailResponse)}`);
+                        return q.resolve({
+                            "code": 0,
+                            "msg": `An e-mail has been sent to ${user.emailAddress} with further instructions.`
+                        })
+                    }).catch((error) => {
+                        console.warn("Exception has been raised", error.toString());
+                        return q.resolve({
+                            "code": 1,
+                            "errMsg": `Exception has been raised. \n  ${error.toString()}`
+                        })
+                    })
+            }
         }
     }
 
+
+
     exports.execute = execute;
+    //The crypto.randomBytes() method is used to generate a cryptographically well-built artificial random data 
+    // and the number of bytes to be generated in the written code.
+    // https://www.geeksforgeeks.org/node-js-crypto-randombytes-method/
+    // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
 
     const randomBytesAsync = promisify(crypto.randomBytes);
 
@@ -104,11 +119,13 @@
         .then((buf) => buf.toString('hex'));
 
     const sendVerifyEmail = (params) => {
+
+        const emailSender = require("../helpers/email_sender");
         const emailBody = {
             to: params.emailAddress,
-            from: 'WebSrv <bhunesh@websrv.com>',
-            subject: 'Please verify your email address Web Srv',
-            html: `Thank you for registering with Web Srv.<br>
+            fromAddress: 'Superman Noledge <superman.noledge@gmail.com>',
+            subject: 'Please verify your email address Superman Noledge',
+            htmlText: `Thank you for registering with Superman Noledge.<br>
             For security reasons, we need to validate your email address before you gain access to the site. Just click below to validate your address:<br><br> 
             <a  type="button" style="padding: 8px 20px;
             background: #0070d3;
@@ -124,6 +141,6 @@
             Thank you!`
         };
         console.warn(`calling email send with ${JSON.stringify(emailBody)}`);
-        //return require("../../helpers/email_sender").EmailSender.send(emailBody)
+        return emailSender.send(emailBody);
     };
 })()
