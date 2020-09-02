@@ -1,6 +1,6 @@
 (function() {
     const sgMail = require('@sendgrid/mail');
-    sgMail.setApiKey(process.env.SUPERMAN_SG_KEY);
+    sgMail.setApiKey(process.env.SUPERMAN_SG_KEY || "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");
 
     function send(emailBody) {
         const msg = {
