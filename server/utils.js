@@ -2,7 +2,7 @@
     var Utils = new function() {
 
         const MongoClient = require('mongodb').MongoClient;
-        const uri = "mongodb+srv://testuser:YplzGxRKZkpuKCN3@cluster0-cvdjl.mongodb.net/todos?retryWrites=true&w=majority";
+        const uri = process.env.SUPERMAN_MONGO_URI;
         const client = new MongoClient(uri);
 
 
